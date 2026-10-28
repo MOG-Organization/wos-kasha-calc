@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>カーシャのお願い屋さん 計算ツール</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eaf1f8; --surface:#ffffff; --surface2:#f3f7fb; --ink:#1a2a3e; --muted:#566880; --line:#d3deea;
+  --ticket:#2268ad; --ticket-soft:#dbe9f7; --seal:#c2356a; --seal-soft:#f9e1ea; --amber:#9a5c08; --amber-soft:#fbecd3;
+  --good:#1c7347; --warn:#b03f15; --warn-soft:#fbe5dc; --track:#dfe7f0;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1726; --surface:#142238; --surface2:#1a2b45; --ink:#e4ecf6; --muted:#9db0c7; --line:#2a3d5b;
+    --ticket:#7db9ef; --ticket-soft:#1d3656; --seal:#f28ab0; --seal-soft:#3c2236; --amber:#f0b85e; --amber-soft:#3a2d17;
+    --good:#62d39c; --warn:#ff9e78; --warn-soft:#3d2219; --track:#22344f;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1726; --surface:#142238; --surface2:#1a2b45; --ink:#e4ecf6; --muted:#9db0c7; --line:#2a3d5b;
+  --ticket:#7db9ef; --ticket-soft:#1d3656; --seal:#f28ab0; --seal-soft:#3c2236; --amber:#f0b85e; --amber-soft:#3a2d17;
+  --good:#62d39c; --warn:#ff9e78; --warn-soft:#3d2219; --track:#22344f;
+  color-scheme:dark;
+}
+:root{ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+html{ scroll-padding-top:env(safe-area-inset-top,0px); }
+*,*::before,*::after{ box-sizing:inherit; }
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+  font-weight:500; line-height:1.65; font-size:15px;
+  font-variant-numeric:tabular-nums;
+}
+.wrap{ max-width:1120px; margin:0 auto; padding:20px 16px 48px; }
+header{ padding:8px 0 18px; }
+header h1{ font-size:clamp(22px,4vw,30px); font-weight:900; margin:0; letter-spacing:.02em; line-height:1.3; }
+header p{ margin:6px 0 0; color:var(--muted); font-size:13px; }
+.layout{ display:grid; gap:18px; grid-template-columns:1fr; }
+.layout > *{ min-width:0; }
+@media (min-width:900px){ .layout{ grid-template-columns:330px 1fr; align-items:start; } aside{ position:sticky; top:calc(12px + env(safe-area-inset-top,0px)); max-height:calc(100vh - 24px); overflow:auto; } }
+.panel{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px; }
+aside h2, .panel h2{ font-size:16px; margin:0 0 10px; font-weight:900; }
+h3{ font-size:15px; margin:18px 0 8px; font-weight:700; }
+.field{ display:grid; grid-template-columns:1fr 92px; gap:8px; align-items:center; margin:8px 0; }
+.field label{ font-size:13.5px; }
+.field small{ display:block; color:var(--muted); font-size:11.5px; line-height:1.4; }
+input[type=number]{
+  width:100%; padding:7px 8px; border:1px solid var(--line); border-radius:8px; background:var(--surface2); color:var(--ink);
+  font:inherit; font-size:15px; text-align:right;
+}
+input[type=number]:focus-visible, button:focus-visible, select:focus-visible, input[type=checkbox]:focus-visible, input[type=radio]:focus-visible{ outline:2px solid var(--ticket); outline-offset:2px; }
+select{ padding:7px 8px; border:1px solid var(--line); border-radius:8px; background:var(--surface2); color:var(--ink); font:inherit; }
+.comm{ list-style:none; margin:6px 0 0; padding:0; }
+.comm li{ display:flex; gap:8px; align-items:center; padding:5px 0; border-bottom:1px dashed var(--line); font-size:13px; }
+.comm li:last-child{ border-bottom:0; }
+.comm label{ flex:1; display:flex; gap:8px; align-items:center; cursor:pointer; }
+.rw{ white-space:nowrap; font-weight:700; font-size:12.5px; }
+.rw.t{ color:var(--ticket); } .rw.s{ color:var(--seal); }
+.sum-line{ margin-top:10px; padding:10px; border-radius:10px; background:var(--ticket-soft); font-size:13px; }
+.btn-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+button{ font:inherit; font-weight:700; cursor:pointer; border-radius:9px; border:1px solid var(--line); background:var(--surface2); color:var(--ink); padding:7px 12px; }
+button.primary{ background:var(--ticket); border-color:var(--ticket); color:var(--surface); }
+.tabs{ display:flex; gap:4px; flex-wrap:wrap; margin-bottom:-1px; position:relative; z-index:1; }
+.tabs button{ border-radius:10px 10px 0 0; border-bottom-color:var(--line); background:var(--surface2); color:var(--muted); padding:9px 14px; }
+.tabs button[aria-selected="true"]{ background:var(--surface); color:var(--ink); border-bottom-color:var(--surface); }
+.tabpanel{ border-top-left-radius:0; }
+.tabpanel[hidden]{ display:none; }
+.lead{ color:var(--muted); font-size:13.5px; margin:0 0 12px; }
+.packs{ display:grid; gap:8px; grid-template-columns:repeat(auto-fill,minmax(148px,1fr)); }
+.pack{ border:1px solid var(--line); border-radius:10px; padding:10px; background:var(--surface2); }
+.pack .nm{ font-weight:900; font-size:14px; }
+.pack .meta{ font-size:12px; color:var(--muted); margin:2px 0 6px; }
+.pack .ctl{ display:flex; align-items:center; gap:6px; }
+.pack .ctl input{ width:64px; }
+.pack .ctl span{ font-size:12px; color:var(--muted); }
+.bignums{ display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin:14px 0; }
+.bn{ border-radius:12px; padding:12px; background:var(--surface2); border:1px solid var(--line); }
+.bn .k{ font-size:12.5px; color:var(--muted); }
+.bn .v{ font-size:26px; font-weight:900; line-height:1.2; }
+.bn .v small{ font-size:13px; font-weight:700; }
+.bn .x{ font-size:12px; color:var(--muted); margin-top:2px; }
+.bn.seal{ background:var(--seal-soft); border-color:transparent; } .bn.seal .v{ color:var(--seal); }
+.bn.ticket{ background:var(--ticket-soft); border-color:transparent; } .bn.ticket .v{ color:var(--ticket); }
+.bn.amber{ background:var(--amber-soft); border-color:transparent; } .bn.amber .v{ color:var(--amber); }
+/* wish track — the signature element */
+.trackbox{ margin:16px 0 6px; }
+.trackhead{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); }
+.track{ position:relative; height:30px; border-radius:15px; background:var(--track); overflow:hidden; margin-top:4px; }
+.track .done{ position:absolute; inset:0 auto 0 0; background:var(--muted); opacity:.45; }
+.track .new{ position:absolute; top:0; bottom:0; background:var(--ticket); }
+.track .hund{ position:absolute; top:0; bottom:0; width:2px; background:var(--surface); opacity:.85; }
+.track .ms{ position:absolute; top:0; bottom:0; width:0; border-left:2px dashed var(--amber); }
+.chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.chip{ font-size:12px; border-radius:999px; padding:3px 10px; border:1px solid var(--line); color:var(--muted); }
+.chip.on{ background:var(--amber-soft); border-color:transparent; color:var(--amber); font-weight:700; }
+.note{ font-size:13px; border-radius:10px; padding:10px 12px; margin:10px 0; background:var(--surface2); border:1px solid var(--line); }
+.note.warn{ background:var(--warn-soft); border-color:transparent; color:var(--ink); }
+.note.warn b{ color:var(--warn); }
+.tblwrap{ overflow-x:auto; margin:8px 0; }
+table{ border-collapse:collapse; width:100%; font-size:13px; min-width:520px; }
+th,td{ padding:7px 8px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+th{ color:var(--muted); font-weight:700; font-size:12px; }
+th:first-child,td:first-child{ text-align:left; }
+tr.best td{ background:var(--ticket-soft); font-weight:700; }
+td input[type=number]{ width:76px; padding:4px 6px; font-size:14px; }
+.radio-row{ display:flex; flex-wrap:wrap; gap:14px; margin:6px 0 10px; font-size:13.5px; }
+.radio-row label{ display:flex; align-items:center; gap:6px; cursor:pointer; }
+.target-row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:8px 0; }
+.target-row input{ width:120px; }
+details{ margin-top:16px; }
+summary{ cursor:pointer; font-weight:700; }
+.src{ font-size:13px; color:var(--ink); }
+.src li{ margin:4px 0; }
+.muted{ color:var(--muted); }
+.mc{ font-size:13px; color:var(--muted); margin-top:-4px; }
+.bar{ display:flex; height:10px; border-radius:5px; overflow:hidden; background:var(--track); margin-top:6px; }
+.bar i{ display:block; height:100%; }
+footer{ margin-top:24px; font-size:12px; color:var(--muted); }
+/* ---------- cute touches: paws & cabin ---------- */
+:root{
+  --wood:#c07c43; --wood-dark:#7d4b22; --roof:#8e5631; --snow:#ffffff; --glow:#ffd27a; --pumpkin:#ef8a25; --smoke:#c9d6e4;
+  --paw:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cellipse cx='12' cy='16' rx='5.4' ry='4.6'/%3E%3Cellipse cx='5.2' cy='10' rx='2.3' ry='2.9'/%3E%3Cellipse cx='9.4' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='14.6' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='18.8' cy='10' rx='2.3' ry='2.9'/%3E%3C/svg%3E");
+  --ticketmask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M2 6h20v4a2 2 0 0 0 0 4v4H2v-4a2 2 0 0 0 0-4z'/%3E%3C/svg%3E");
+  --bgpaws:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='%232268ad' fill-opacity='.06'%3E%3Cg transform='translate(22 26) rotate(-18)'%3E%3Cellipse cx='12' cy='16' rx='5.4' ry='4.6'/%3E%3Cellipse cx='5.2' cy='10' rx='2.3' ry='2.9'/%3E%3Cellipse cx='9.4' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='14.6' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='18.8' cy='10' rx='2.3' ry='2.9'/%3E%3C/g%3E%3Cg transform='translate(112 104) rotate(22)'%3E%3Cellipse cx='12' cy='16' rx='5.4' ry='4.6'/%3E%3Cellipse cx='5.2' cy='10' rx='2.3' ry='2.9'/%3E%3Cellipse cx='9.4' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='14.6' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='18.8' cy='10' rx='2.3' ry='2.9'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --wood:#a8693a; --wood-dark:#5f3818; --roof:#74432a; --snow:#dfe8f3; --glow:#ffcf6e; --pumpkin:#f39a3c; --smoke:#5d7190;
+    --bgpaws:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='%23ffffff' fill-opacity='.035'%3E%3Cg transform='translate(22 26) rotate(-18)'%3E%3Cellipse cx='12' cy='16' rx='5.4' ry='4.6'/%3E%3Cellipse cx='5.2' cy='10' rx='2.3' ry='2.9'/%3E%3Cellipse cx='9.4' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='14.6' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='18.8' cy='10' rx='2.3' ry='2.9'/%3E%3C/g%3E%3Cg transform='translate(112 104) rotate(22)'%3E%3Cellipse cx='12' cy='16' rx='5.4' ry='4.6'/%3E%3Cellipse cx='5.2' cy='10' rx='2.3' ry='2.9'/%3E%3Cellipse cx='9.4' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='14.6' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='18.8' cy='10' rx='2.3' ry='2.9'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+}
+:root[data-theme="dark"]{
+  --wood:#a8693a; --wood-dark:#5f3818; --roof:#74432a; --snow:#dfe8f3; --glow:#ffcf6e; --pumpkin:#f39a3c; --smoke:#5d7190;
+}
+body{ background-image:var(--bgpaws); background-attachment:fixed; }
+.panel{ border-radius:18px; }
+.hero{ display:flex; align-items:flex-end; justify-content:space-between; gap:14px; }
+.hero-text{ min-width:0; }
+.hut{ width:140px; height:auto; flex:none; margin-bottom:-6px; }
+.hut .smoke{ animation:drift 6s ease-in-out infinite; transform-origin:center; }
+.hut .smoke.s2{ animation-delay:-3s; }
+@keyframes drift{ 0%{ transform:translate(0,4px); opacity:0; } 30%{ opacity:.9; } 100%{ transform:translate(6px,-14px); opacity:0; } }
+@media (max-width:560px){ .hut{ width:96px; } }
+.guide{ list-style:none; margin:0 0 18px; padding:14px 16px; background:var(--surface); border:1px solid var(--line); border-radius:18px; display:grid; gap:10px; counter-reset:g; }
+.guide li{ counter-increment:g; display:grid; grid-template-columns:34px 1fr; gap:10px; align-items:start; font-size:13.5px; line-height:1.6; }
+.guide li::before{ content:counter(g); width:34px; height:34px; display:flex; align-items:flex-end; justify-content:center; padding-bottom:4px; color:var(--surface); font-weight:900; font-size:13px; background:var(--seal); -webkit-mask:var(--paw) center/contain no-repeat; mask:var(--paw) center/contain no-repeat; }
+.guide b{ color:var(--ticket); }
+aside h2::before, .bn.seal .k::before, .pawdot::before{ content:""; display:inline-block; width:15px; height:15px; margin-right:5px; vertical-align:-2px; background:var(--seal); -webkit-mask:var(--paw) center/contain no-repeat; mask:var(--paw) center/contain no-repeat; }
+.bn.ticket .k::before{ content:""; display:inline-block; width:15px; height:15px; margin-right:5px; vertical-align:-3px; background:var(--ticket); -webkit-mask:var(--ticketmask) center/contain no-repeat; mask:var(--ticketmask) center/contain no-repeat; }
+.rw.s::before{ content:""; display:inline-block; width:12px; height:12px; margin-right:2px; vertical-align:-1px; background:var(--seal); -webkit-mask:var(--paw) center/contain no-repeat; mask:var(--paw) center/contain no-repeat; }
+.track .new{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Cg fill='%23ffffff' fill-opacity='.28' transform='translate(7 8) scale(.68)'%3E%3Cellipse cx='12' cy='16' rx='5.4' ry='4.6'/%3E%3Cellipse cx='5.2' cy='10' rx='2.3' ry='2.9'/%3E%3Cellipse cx='9.4' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='14.6' cy='5.6' rx='2.3' ry='2.9'/%3E%3Cellipse cx='18.8' cy='10' rx='2.3' ry='2.9'/%3E%3C/g%3E%3C/svg%3E"); background-size:30px 30px; }
+.track .pawhead{ position:absolute; top:4px; width:22px; height:22px; background:var(--surface); -webkit-mask:var(--paw) center/contain no-repeat; mask:var(--paw) center/contain no-repeat; }
+#commBox summary{ font-size:15px; margin:14px 0 4px; }
+@media (max-width:600px){
+  .tabs{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; }
+  .tabs button{ border-radius:999px; border-bottom-color:var(--line); padding:9px 8px; font-size:13.5px; }
+  .tabs button[aria-selected="true"]{ background:var(--ticket); color:var(--surface); border-color:var(--ticket); }
+  .tabpanel{ border-top-left-radius:18px; }
+  .bn .v{ font-size:23px; }
+}
+@media (prefers-reduced-motion: reduce){ *{ transition:none !important; animation:none !important; } .hut .smoke{ opacity:.7; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <div class="hero-text">
+    <h1><span style="display:inline-block">カーシャのお願い屋さん</span> <span style="display:inline-block">計算ツール</span></h1>
+    <p>狂乱のハロウィン(2026年10月)のゲーム内画面の表記にもとづいて計算しています。確率・数値の出典はページ下部にまとめました。</p>
+  </div>
+  <svg class="hut" viewBox="0 0 140 104" aria-hidden="true">
+    <circle class="smoke" cx="99" cy="16" r="5" fill="var(--smoke)"/>
+    <circle class="smoke s2" cx="104" cy="10" r="4" fill="var(--smoke)"/>
+    <rect x="92" y="24" width="11" height="22" fill="var(--wood-dark)"/>
+    <rect x="89.5" y="21" width="16" height="5" rx="2.5" fill="var(--snow)"/>
+    <rect x="26" y="54" width="88" height="42" rx="4" fill="var(--wood)"/>
+    <path d="M26 64.5H114M26 75H114M26 85.5H114" stroke="var(--wood-dark)" stroke-width="1.6" opacity=".55"/>
+    <path d="M16 58 L70 20 L124 58 Z" fill="var(--roof)"/>
+    <path d="M10 60 L70 15 L130 60 L121 62 Q112 57 104 61 Q96 55 87 59 L70 27 L53 59 Q44 55 36 61 Q28 57 19 62 Z" fill="var(--snow)"/>
+    <rect x="36" y="66" width="16" height="14" rx="3" fill="var(--glow)"/>
+    <path d="M44 66V80M36 73H52" stroke="var(--wood-dark)" stroke-width="1.6"/>
+    <rect x="88" y="66" width="16" height="14" rx="3" fill="var(--glow)"/>
+    <path d="M96 66V80M88 73H104" stroke="var(--wood-dark)" stroke-width="1.6"/>
+    <path d="M61 96V76a9 9 0 0 1 18 0v20z" fill="var(--wood-dark)"/>
+    <circle cx="75" cy="86" r="1.4" fill="var(--glow)"/>
+    <ellipse cx="87" cy="94" rx="7" ry="5.5" fill="var(--pumpkin)"/>
+    <path d="M87 89.5v-3" stroke="var(--wood-dark)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M0 98 Q35 91 70 97 T140 96 V104 H0Z" fill="var(--snow)"/>
+    <g fill="var(--seal)" opacity=".8">
+      <g transform="translate(14 92) rotate(-20) scale(.32)"><ellipse cx="12" cy="16" rx="5.4" ry="4.6"/><ellipse cx="5.2" cy="10" rx="2.3" ry="2.9"/><ellipse cx="9.4" cy="5.6" rx="2.3" ry="2.9"/><ellipse cx="14.6" cy="5.6" rx="2.3" ry="2.9"/><ellipse cx="18.8" cy="10" rx="2.3" ry="2.9"/></g>
+      <g transform="translate(30 96) rotate(-8) scale(.32)"><ellipse cx="12" cy="16" rx="5.4" ry="4.6"/><ellipse cx="5.2" cy="10" rx="2.3" ry="2.9"/><ellipse cx="9.4" cy="5.6" rx="2.3" ry="2.9"/><ellipse cx="14.6" cy="5.6" rx="2.3" ry="2.9"/><ellipse cx="18.8" cy="10" rx="2.3" ry="2.9"/></g>
+      <g transform="translate(45 93) rotate(10) scale(.32)"><ellipse cx="12" cy="16" rx="5.4" ry="4.6"/><ellipse cx="5.2" cy="10" rx="2.3" ry="2.9"/><ellipse cx="9.4" cy="5.6" rx="2.3" ry="2.9"/><ellipse cx="14.6" cy="5.6" rx="2.3" ry="2.9"/><ellipse cx="18.8" cy="10" rx="2.3" ry="2.9"/></g>
+    </g>
+  </svg>
+</header>
+
+<ol class="guide" aria-label="使い方">
+  <li><span>「あなたの状況」に、手持ちの券と残り日数を入れます。初めての方は初期値のままで大丈夫です。</span></li>
+  <li><span>知りたいことに合わせてタブを選びます。無課金で何がもらえるかは<b>手持ちから計算</b>、目標までいくらかかるかは<b>目標から逆算</b>、券をためるべきかは<b>今引くか、ためるか</b>、印の使い道は<b>小屋の交換プラン</b>です。</span></li>
+  <li><span>青い数字はお願い券と回数、ピンクの肉球は夢を叶える印です。</span></li>
+</ol>
+
+<div class="layout">
+<aside class="panel" aria-labelledby="status-h">
+  <h2 id="status-h">あなたの状況</h2>
+  <div class="field"><label for="heldTickets">手持ちのお願い券<small>前回からの繰り越し分や、受取済みの委託報酬を含めた枚数</small></label><input id="heldTickets" type="number" min="0" value="0"></div>
+  <div class="field"><label for="heldSeals">手持ちの夢を叶える印</label><input id="heldSeals" type="number" min="0" value="0"></div>
+  <div class="field"><label for="doneWishes">今回すでに引いた回数<small>画面上部の進捗の回数</small></label><input id="doneWishes" type="number" min="0" value="0"></div>
+  <div class="field"><label for="freeDays">無料パックの残り受取日数<small>最大5日。今日受け取っていなければ今日も含める</small></label><input id="freeDays" type="number" min="0" max="5" value="5"></div>
+  <div class="field"><label for="buyDays">パックを買える残り日数<small>パックは1日ごとに購入上限があります</small></label><input id="buyDays" type="number" min="0" max="5" value="5"></div>
+  <div class="field"><label for="shopDays">小屋の残り日数<small>1日1回の交換品に使います。最大6日</small></label><input id="shopDays" type="number" min="0" max="6" value="6"></div>
+
+  <details id="commBox" open>
+  <summary>これから受け取る委託報酬</summary>
+  <p class="muted" style="font-size:12px;margin:0">受取済みのものはチェックを外し、手持ちの券に含めてください。達成できそうにないものも外します。</p>
+  <ul class="comm" id="commList"></ul>
+  </details>
+  <div class="sum-line" id="baseSummary"></div>
+  <div class="btn-row"><button type="button" id="resetBtn">入力を初期値に戻す</button></div>
+</aside>
+
+<section>
+  <div class="tabs" role="tablist" aria-label="計算モード">
+    <button role="tab" id="tab-forward" aria-controls="panel-forward" aria-selected="true">手持ちから計算</button>
+    <button role="tab" id="tab-reverse" aria-controls="panel-reverse" aria-selected="false">目標から逆算</button>
+    <button role="tab" id="tab-save" aria-controls="panel-save" aria-selected="false">今引くか、ためるか</button>
+    <button role="tab" id="tab-shop" aria-controls="panel-shop" aria-selected="false">小屋の交換プラン</button>
+  </div>
+
+  <!-- 1. Forward -->
+  <div class="panel tabpanel" role="tabpanel" id="panel-forward" aria-labelledby="tab-forward">
+    <p class="lead">買うパックの回数を入れると、引ける回数と手に入るものの期待値を計算します。無課金ならすべて0のままで構いません。</p>
+    <div class="packs" id="fwdPacks"></div>
+    <div class="bignums" id="fwdNums"></div>
+    <div class="trackbox" id="fwdTrack"></div>
+    <div id="fwdNotes"></div>
+    <h3>ルーレットから直接出る品物(期待値)</h3>
+    <div class="tblwrap"><table id="fwdDrops"></table></div>
+  </div>
+
+  <!-- 2. Reverse -->
+  <div class="panel tabpanel" role="tabpanel" id="panel-reverse" aria-labelledby="tab-reverse" hidden>
+    <p class="lead">目標を決めると、パックの購入上限の範囲で全組み合わせを調べ、最も安い買い方を出します。同じ金額なら福袋が多く、券の余裕が大きい順に並べます。</p>
+    <div class="radio-row" role="radiogroup" aria-label="目標の種類">
+      <label><input type="radio" name="rtype" value="wishes" checked> 願い事の回数</label>
+      <label><input type="radio" name="rtype" value="seals"> 夢を叶える印(期待値)</label>
+      <label><input type="radio" name="rtype" value="shop"> 小屋の交換プランの合計</label>
+    </div>
+    <div class="target-row">
+      <label for="rTarget" id="rTargetLabel">目標の回数</label>
+      <input id="rTarget" type="number" min="0" value="600">
+      <span class="muted" id="rTargetHint"></span>
+    </div>
+    <div id="revResult"></div>
+  </div>
+
+  <!-- 3. Save -->
+  <div class="panel tabpanel" role="tabpanel" id="panel-save" aria-labelledby="tab-save" hidden>
+    <p class="lead">心願値は100未満だとイベント終了時に消えます。お願い券は次回へ繰り越せるので、券をためて1回のイベントでまとめて引くと、真心願い事の分だけ印が増えます。課金なしの前提で比べます。</p>
+    <div class="field" style="max-width:420px"><label for="futureTickets">次回以降、1回のイベントでもらえる券の見込み<small>今回と同じ委託20枚+無料パック5枚なら25枚(仮定)</small></label><input id="futureTickets" type="number" min="0" value="25"></div>
+    <div class="tblwrap"><table id="saveTable"></table></div>
+    <div id="saveNotes"></div>
+  </div>
+
+  <!-- 4. Shop -->
+  <div class="panel tabpanel" role="tabpanel" id="panel-shop" aria-labelledby="tab-shop" hidden>
+    <p class="lead">交換したい回数を入れると、必要な印の合計と、手に入る見込みの印で足りるかを確かめます。</p>
+    <div class="radio-row" role="radiogroup" aria-label="使える印の見込み">
+      <label><input type="radio" name="ssrc" value="fwd" checked> 「手持ちから計算」の結果を使う</label>
+      <label><input type="radio" name="ssrc" value="manual"> 自分で入力する</label>
+      <input id="manualSeals" type="number" min="0" value="0" style="width:110px" aria-label="使える印の数" disabled>
+    </div>
+    <div class="tblwrap"><table id="shopTable"></table></div>
+    <div class="bignums" id="shopNums"></div>
+    <div id="shopNotes"></div>
+    <div class="btn-row"><button type="button" class="primary" id="shopToReverse">この合計を目標にして逆算する</button></div>
+  </div>
+
+  <details class="panel" style="margin-top:18px">
+    <summary>計算の根拠と仮定</summary>
+    <h3>ゲーム内画面から読み取った数値(2026年10月28日撮影のスクリーンショット)</h3>
+    <ul class="src">
+      <li>通常の願い事の排出確率:ルール説明の「確率詳細」タブ。12項目の合計が100.000%になることを確認済み。</li>
+      <li>真心願い事の排出確率:同じく「確率詳細」タブ(印×1000が10%、×600が15%、×400が25%、×200が50%)。</li>
+      <li>心願値:通常の願い事1回で1ポイント、100ポイントで真心願い事1回(ルール説明)。</li>
+      <li>イベント終了時、100ポイント未満の心願値は消える。お願い券と夢を叶える印は消えずに次回へ繰り越せる(ルール説明「報酬の再配布」)。</li>
+      <li>回数達成報酬(10・30・70・200・400・600・1,000回):お願い屋さん画面上部の進捗バー。</li>
+      <li>委託13件の内容と報酬、心願パックの価格・券の枚数・購入上限・ダイヤ・福袋の数:委託画面と心願パック画面。</li>
+      <li>小屋の品物・個数・価格・交換上限:カーシャの小屋の画面。アイコン右下の数字が1回の交換で受け取れる個数であることは、プレイヤー確認済み。</li>
+    </ul>
+    <h3>仮定(画面からは確認できていないもの)</h3>
+    <ul class="src">
+      <li>券1枚で通常の願い事1回。真心願い事は券を使わず、進捗の回数にも数えない。</li>
+      <li>心願値が100たまったら、そのつど真心願い事を引く。終了時に残る100ポイント以上の心願値の換算レートは不明なので計算に使っていません。</li>
+      <li>委託は画面で確認できた13件がすべて。</li>
+      <li>200回以降の回数達成報酬の宝箱の種類、小屋の一部の品物の正式名称、福袋1つあたりのダイヤの量は未確認です。</li>
+      <li>「今引くか、ためるか」の次回以降の券の枚数は仮定です。次回も同じ形式で開催される保証はありません。</li>
+      <li>「80%の範囲」は、実際の確率で何千回も試した結果の上下10%を除いた幅です。試すたびに少しずれます。</li>
+    </ul>
+  </details>
+  <footer>入力内容はこのブラウザにだけ保存されます。</footer>
+</section>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- Data (from in-game screenshots, 2026-10-28) ---------- */
+const NORMAL = [
+  {name:"夢を叶える印×1000", p:0.002, seal:1000},
+  {name:"夢を叶える印×600",  p:0.003, seal:600},
+  {name:"夢を叶える印×400",  p:0.005, seal:400},
+  {name:"夢を叶える印×200",  p:0.010, seal:200},
+  {name:"レジェンド共通英雄の欠片", p:0.018, n:1, unit:"個"},
+  {name:"精錬エナジー源石", p:0.12, n:1, unit:"個"},
+  {name:"100pt強化経験値パーツ(×5枠)", p:0.14, n:5, unit:"個"},
+  {name:"火晶", p:0.20, n:1, unit:"個"},
+  {name:"英雄装備ラッキー宝箱", p:0.13, n:1, unit:"個"},
+  {name:"ダイヤ(1,000ダイヤ枠)", p:0.16, n:1000, unit:""},
+  {name:"100pt強化経験値パーツ(×1枠)", p:0.20, n:1, unit:"個"},
+  {name:"一般加速(3時間枠)", p:0.012, n:3, unit:"時間"}
+];
+const SINCERE = [[1000,0.10],[600,0.15],[400,0.25],[200,0.50]];
+const EV_N = NORMAL.reduce((a,x)=>a+(x.seal||0)*x.p,0);          // 7.8
+const EV_S = SINCERE.reduce((a,x)=>a+x[0]*x[1],0);                // 390
+const MILESTONES = [
+  [10,"1,000ダイヤ×3"],[30,"精錬エナジー源石×25"],[70,"100ptパーツ×150"],
+  [200,"宝箱×1"],[400,"宝箱×10"],[600,"宝箱×15"],[1000,"宝箱×25"]
+];
+const PACKS = [
+  {name:"心願パック1", price:800,   t:10,  perDay:1, bags:0, dia:2500},
+  {name:"心願パック2", price:1600,  t:18,  perDay:1, bags:0, dia:5000},
+  {name:"心願パック3", price:3200,  t:35,  perDay:1, bags:1, dia:10000},
+  {name:"心願パック4", price:8000,  t:80,  perDay:1, bags:2, dia:25000},
+  {name:"心願パック5", price:15800, t:152, perDay:3, bags:3, dia:50000}
+];
+const COMMS = [
+  {name:"累計ログイン1日", t:1},{name:"累計ログイン2日", t:2},{name:"累計ログイン3日", t:3},
+  {name:"集結で氷原の巨獣3頭", t:1},{name:"集結で氷原の巨獣10頭", t:2},{name:"集結で氷原の巨獣30頭", t:3},
+  {name:"情報5件達成", t:1},{name:"情報15件達成", t:2},{name:"情報30件達成", t:2},{name:"情報50件達成", t:3},
+  {name:"競技場に5回挑戦", s:5},{name:"競技場に10回挑戦", s:10},{name:"競技場に15回挑戦", s:15}
+];
+const SHOP = [
+  {name:"100pt強化経験値パーツ", qty:5,  price:5,   limit:"daily"},
+  {name:"火晶",                 qty:60, price:100, limit:50},
+  {name:"レジェンド共通英雄の欠片", qty:10, price:50, limit:10},
+  {name:"英雄装備ラッキー宝箱",    qty:12, price:50,  limit:300},
+  {name:"100pt強化経験値パーツ", qty:24, price:50,  limit:300},
+  {name:"精錬エナジー源石",       qty:12, price:50,  limit:100},
+  {name:"紫の結晶(名称未確認)",   qty:1,  price:50,  limit:60},
+  {name:"巻物(名称未確認)",       qty:60, price:100, limit:50},
+  {name:"金の宝箱(名称未確認)",   qty:24, price:100, limit:50},
+  {name:"設計図風の巻物(名称未確認)", qty:20, price:50, limit:100},
+  {name:"本(名称未確認)",         qty:24, price:50,  limit:100},
+  {name:"1時間加速",             qty:24, price:40,  limit:100}
+];
+
+/* ---------- State ---------- */
+const DEFAULT = {
+  heldTickets:0, heldSeals:0, doneWishes:0, freeDays:5, buyDays:5, shopDays:6,
+  comms: COMMS.map(()=>true), packs:[0,0,0,0,0], futureTickets:25,
+  rtype:"wishes", rTarget:600, ssrc:"fwd", manualSeals:0, shop: SHOP.map(()=>0), tab:"forward"
+};
+const KEY = "kasha-wish-calc-v1";
+let S = load();
+function load(){
+  try{ const raw = localStorage.getItem(KEY); if(raw){ const o = JSON.parse(raw); return Object.assign(structuredClone(DEFAULT), o); } }catch(e){}
+  return structuredClone(DEFAULT);
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ---------- Helpers ---------- */
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString("ja-JP");
+const fmt1 = n => (Math.round(n*10)/10).toLocaleString("ja-JP");
+const yen = n => "¥" + Math.round(n).toLocaleString("ja-JP");
+const clampInt = (v,min,max)=>{ v = Math.floor(Number(v)); if(!isFinite(v)) v=min; if(v<min) v=min; if(max!=null && v>max) v=max; return v; };
+function packMax(i){ return PACKS[i].perDay * S.buyDays; }
+function shopMax(i){ return SHOP[i].limit==="daily" ? S.shopDays : SHOP[i].limit; }
+
+function base(){
+  let t = S.heldTickets + S.freeDays, s = S.heldSeals;
+  COMMS.forEach((c,i)=>{ if(S.comms[i]){ t += c.t||0; s += c.s||0; } });
+  return {tickets:t, seals:s};
+}
+function evaluate(counts){
+  const b = base();
+  let pt=0, cost=0, bags=0, dia=0;
+  counts.forEach((c,i)=>{ pt+=c*PACKS[i].t; cost+=c*PACKS[i].price; bags+=c*PACKS[i].bags; dia+=c*PACKS[i].dia; });
+  const newW = b.tickets + pt;
+  const total = S.doneWishes + newW;
+  const sincere = Math.floor(total/100) - Math.floor(S.doneWishes/100);
+  const expSeals = b.seals + newW*EV_N + sincere*EV_S;
+  return {newW, total, sincere, expSeals, baseSeals:b.seals, cost, bags, dia, leftover: total%100, packTickets:pt};
+}
+function milestonesReached(total){ return MILESTONES.filter(m=>total>=m[0]); }
+function nextMilestone(total){ return MILESTONES.find(m=>total<m[0]); }
+
+/* exhaustive search over pack counts */
+function searchAll(pred, lower){
+  const max = PACKS.map((_,i)=>packMax(i));
+  const lo = lower || [0,0,0,0,0];
+  const out = [];
+  const c = [0,0,0,0,0];
+  (function rec(i){
+    if(i===PACKS.length){ const ev = evaluate(c); if(pred(ev)) out.push({counts:c.slice(), ev}); return; }
+    for(let k=lo[i]; k<=max[i]; k++){ c[i]=k; rec(i+1); }
+  })(0);
+  return out;
+}
+function rank(list, slackFn){
+  return list.sort((a,b)=> a.ev.cost-b.ev.cost || b.ev.bags-a.ev.bags || slackFn(b)-slackFn(a));
+}
+function pareto(list){
+  // min cost for each bag count, then keep strictly better trade-offs
+  const byBags = new Map();
+  list.forEach(x=>{ const k=x.ev.bags; const cur=byBags.get(k); if(!cur || x.ev.cost<cur.ev.cost || (x.ev.cost===cur.ev.cost && x.ev.newW>cur.ev.newW)) byBags.set(k,x); });
+  const arr = [...byBags.values()].sort((a,b)=>a.ev.cost-b.ev.cost || b.ev.bags-a.ev.bags);
+  const res=[]; let bestBags=-1;
+  arr.forEach(x=>{ if(x.ev.bags>bestBags){ res.push(x); bestBags=x.ev.bags; } });
+  return res;
+}
+
+/* Monte Carlo for seal distribution */
+const mcCache = new Map();
+function monteCarlo(newW, sincere, baseSeals){
+  const key = newW+"|"+sincere+"|"+baseSeals;
+  if(mcCache.has(key)) return mcCache.get(key);
+  const runs = newW > 1500 ? 4000 : 10000;
+  const arr = new Float64Array(runs);
+  for(let r=0;r<runs;r++){
+    let s = baseSeals;
+    for(let w=0; w<newW; w++){
+      const x = Math.random();
+      if(x<0.02){ s += x<0.002?1000 : x<0.005?600 : x<0.010?400 : 200; }
+    }
+    for(let k=0;k<sincere;k++){
+      const x = Math.random();
+      s += x<0.10?1000 : x<0.25?600 : x<0.50?400 : 200;
+    }
+    arr[r]=s;
+  }
+  arr.sort();
+  const q = p => arr[Math.min(runs-1, Math.floor(p*runs))];
+  const res = {p10:q(0.10), p50:q(0.50), p90:q(0.90), arr, runs};
+  if(mcCache.size>40) mcCache.clear();
+  mcCache.set(key,res);
+  return res;
+}
+function probAtLeast(mc, x){
+  const a = mc.arr; let lo=0, hi=a.length;
+  while(lo<hi){ const m=(lo+hi)>>1; if(a[m] < x) lo=m+1; else hi=m; }
+  return (a.length-lo)/a.length;
+}
+
+/* ---------- Status panel ---------- */
+function buildStatus(){
+  ["heldTickets","heldSeals","doneWishes","freeDays","buyDays","shopDays"].forEach(id=>{
+    const el=$(id); el.value=S[id];
+    el.addEventListener("input",()=>{
+      const max = el.max!=="" ? Number(el.max) : null;
+      S[id]=clampInt(el.value,0,max); render();
+    });
+    el.addEventListener("change",()=>{ el.value=S[id]; });
+  });
+  const ul=$("commList"); ul.innerHTML="";
+  COMMS.forEach((c,i)=>{
+    const li=document.createElement("li");
+    const rw = c.t ? `<span class="rw t">券${c.t}</span>` : `<span class="rw s">印${c.s}</span>`;
+    li.innerHTML=`<label><input type="checkbox" ${S.comms[i]?"checked":""}> <span>${c.name}</span></label>${rw}`;
+    li.querySelector("input").addEventListener("change",e=>{ S.comms[i]=e.target.checked; render(); });
+    ul.appendChild(li);
+  });
+  $("resetBtn").addEventListener("click",()=>{ const tab=S.tab; S=structuredClone(DEFAULT); S.tab=tab; save(); location.reload(); });
+}
+function renderStatus(){
+  const b=base();
+  $("baseSummary").innerHTML = `課金なしで使える券:<b>${fmt(b.tickets)}枚</b>(手持ち${fmt(S.heldTickets)}+委託${fmt(b.tickets-S.heldTickets-S.freeDays)}+無料パック${S.freeDays})<br>課金なしで持てる印:<b>${fmt(b.seals)}</b>(手持ち+委託)`;
+}
+
+/* ---------- 1. Forward ---------- */
+function buildForward(){
+  const box=$("fwdPacks"); box.innerHTML="";
+  PACKS.forEach((p,i)=>{
+    const d=document.createElement("div"); d.className="pack";
+    d.innerHTML=`<div class="nm">${p.name}</div>
+      <div class="meta">${yen(p.price)}・券${p.t}枚${p.bags?`・福袋${p.bags}`:""}<br>1日${p.perDay}回まで</div>
+      <div class="ctl"><input type="number" min="0" value="${S.packs[i]}" aria-label="${p.name}を買う回数"><span>回(最大<b class="pm"></b>)</span></div>`;
+    const inp=d.querySelector("input");
+    inp.addEventListener("input",()=>{ S.packs[i]=clampInt(inp.value,0,packMax(i)); render(); });
+    inp.addEventListener("change",()=>{ inp.value=S.packs[i]; });
+    box.appendChild(d);
+  });
+}
+function renderForward(){
+  // clamp to current limits
+  const inputs=$("fwdPacks").querySelectorAll("input");
+  PACKS.forEach((p,i)=>{ if(S.packs[i]>packMax(i)){ S.packs[i]=packMax(i); inputs[i].value=S.packs[i]; } $("fwdPacks").querySelectorAll(".pm")[i].textContent=packMax(i); inputs[i].max=packMax(i); });
+  const ev=evaluate(S.packs);
+  const mc=monteCarlo(ev.newW, ev.sincere, ev.baseSeals);
+  const perT = ev.newW ? (ev.expSeals-ev.baseSeals)/ev.newW : 0;
+  $("fwdNums").innerHTML = `
+    <div class="bn"><div class="k">課金額</div><div class="v">${yen(ev.cost)}</div><div class="x">福袋 ${ev.bags}個・パックのダイヤ ${fmt(ev.dia)}</div></div>
+    <div class="bn ticket"><div class="k">これから引ける回数</div><div class="v">${fmt(ev.newW)}<small>回</small></div><div class="x">進捗 ${fmt(S.doneWishes)} → ${fmt(ev.total)}回・真心 ${ev.sincere}回</div></div>
+    <div class="bn seal"><div class="k">印の期待値(手持ち・委託を含む)</div><div class="v">${fmt(ev.expSeals)}</div><div class="x">80%の範囲:${fmt(mc.p10)}〜${fmt(mc.p90)}</div></div>
+    <div class="bn"><div class="k">券1枚あたりの印</div><div class="v">${fmt1(perT)}</div><div class="x">真心なし7.8/100回ごとに+390</div></div>`;
+  renderTrack($("fwdTrack"), S.doneWishes, ev.total);
+  // notes
+  let notes="";
+  if(ev.leftover>0){
+    const need = 100-ev.leftover;
+    notes += `<div class="note warn"><b>心願値${ev.leftover}が終了時に消えます。</b> あと${need}回引くと真心願い事が1回増え、印の期待値が約${fmt(need*EV_N+EV_S)}増えます。`;
+    const target = ev.total + need;
+    const cands = searchAll(e=>e.total>=target, S.packs);
+    if(cands.length){
+      const best = rank(cands, x=>x.ev.total)[0];
+      const add = best.ev.cost-ev.cost;
+      const diff = best.counts.map((c,i)=>c-S.packs[i]).map((d,i)=>d>0?`${PACKS[i].name}×${d}`:"").filter(Boolean).join("+");
+      notes += ` 今の買い方に追加するなら、最安は<b>${diff}(+${yen(add)})</b>です。`;
+    } else {
+      notes += ` パックの購入上限の範囲では届きません。`;
+    }
+    notes += `</div>`;
+  }
+  const nm = nextMilestone(ev.total);
+  if(nm) notes += `<div class="note">次の回数達成報酬は<b>${nm[0]}回(${nm[1]})</b>で、あと${fmt(nm[0]-ev.total)}回です。</div>`;
+  $("fwdNotes").innerHTML = notes;
+  // drops
+  let rows = `<tr><th>品物</th><th>排出率</th><th>期待値</th></tr>`;
+  NORMAL.filter(x=>!x.seal).forEach(x=>{
+    rows += `<tr><td>${x.name}</td><td>${(x.p*100).toFixed(1)}%</td><td>${fmt1(ev.newW*x.p*x.n)}${x.unit}</td></tr>`;
+  });
+  $("fwdDrops").innerHTML = rows;
+}
+function renderTrack(el, done, total){
+  const scale = Math.max(1000, Math.ceil(total/100)*100);
+  const pct = v => (v/scale*100).toFixed(3)+"%";
+  let h = `<div class="trackhead"><span>進捗の回数(灰色はすでに引いた分、青はこれから)</span><span>${fmt(total)} / ${fmt(scale)}</span></div>
+    <div class="track" role="img" aria-label="進捗 ${total}回、目盛り${scale}回">
+    <div class="done" style="width:${pct(Math.min(done,scale))}"></div>
+    <div class="new" style="left:${pct(Math.min(done,scale))};width:${pct(Math.min(total,scale)-Math.min(done,scale))}"></div>`;
+  for(let k=100;k<scale;k+=100) h += `<div class="hund" style="left:${pct(k)}"></div>`;
+  MILESTONES.forEach(m=>{ if(m[0]<=scale) h += `<div class="ms" style="left:${pct(m[0])}" title="${m[0]}回:${m[1]}"></div>`; });
+  if(total>done) h += `<div class="pawhead" style="left:max(4px, calc(${pct(Math.min(total,scale))} - 26px))"></div>`;
+  h += `</div><div class="chips">`;
+  MILESTONES.forEach(m=>{ h += `<span class="chip ${total>=m[0]?"on":""}">${m[0]}回 ${m[1]}${total>=m[0]?" ✓":""}</span>`; });
+  h += `</div><p class="mc">白い区切りは100回ごと(真心願い事)、点線は回数達成報酬の位置です。200回以降の宝箱の種類は未確認です。</p>`;
+  el.innerHTML = h;
+}
+
+/* ---------- 2. Reverse ---------- */
+function shopTotal(){ return SHOP.reduce((a,x,i)=>a+x.price*S.shop[i],0); }
+function buildReverse(){
+  document.querySelectorAll('input[name="rtype"]').forEach(r=>{
+    r.checked = (r.value===S.rtype);
+    r.addEventListener("change",()=>{ S.rtype=r.value; render(); });
+  });
+  const t=$("rTarget"); t.value=S.rTarget;
+  t.addEventListener("input",()=>{ S.rTarget=clampInt(t.value,0,null); render(); });
+}
+function renderReverse(){
+  const t=$("rTarget");
+  if(S.rtype==="shop"){ t.disabled=true; t.value=shopTotal(); $("rTargetLabel").textContent="必要な印"; $("rTargetHint").textContent="「小屋の交換プラン」で入れた合計を使います"; }
+  else { t.disabled=false; if(document.activeElement!==t) t.value=S.rTarget; $("rTargetLabel").textContent = S.rtype==="wishes"?"目標の回数":"目標の印"; $("rTargetHint").textContent = S.rtype==="wishes"?"進捗の回数(すでに引いた分を含む)":"期待値で届く買い方を探します"; }
+  const target = S.rtype==="shop" ? shopTotal() : S.rTarget;
+  const pred = S.rtype==="wishes" ? (e=>e.total>=target) : (e=>e.expSeals>=target);
+  const slack = S.rtype==="wishes" ? (x=>x.ev.total-target) : (x=>x.ev.expSeals-target);
+  const list = searchAll(pred);
+  const box=$("revResult");
+  if(!list.length){
+    const maxEv = evaluate(PACKS.map((_,i)=>packMax(i)));
+    box.innerHTML = `<div class="note warn"><b>パックの購入上限の範囲では届きません。</b> すべて上限まで買った場合でも、進捗${fmt(maxEv.total)}回・印の期待値${fmt(maxEv.expSeals)}(${yen(maxEv.cost)})です。パックを買える日数を確かめてください。</div>`;
+    return;
+  }
+  rank(list, slack);
+  const best=list[0];
+  const mc = monteCarlo(best.ev.newW, best.ev.sincere, best.ev.baseSeals);
+  const unit = S.rtype==="wishes" ? "回" : "印";
+  const slackVal = S.rtype==="wishes" ? `券の余裕 ${fmt(best.ev.total-target)}枚` : `期待値の余裕 ${fmt(best.ev.expSeals-target)}印`;
+  let h = `<div class="bignums">
+    <div class="bn"><div class="k">最安の課金額</div><div class="v">${yen(best.ev.cost)}</div><div class="x">${best.ev.cost===0?"課金なしで届きます":"福袋 "+best.ev.bags+"個"}</div></div>
+    <div class="bn ticket"><div class="k">進捗の回数</div><div class="v">${fmt(best.ev.total)}<small>回</small></div><div class="x">${slackVal}</div></div>
+    <div class="bn seal"><div class="k">印の期待値</div><div class="v">${fmt(best.ev.expSeals)}</div><div class="x">80%の範囲:${fmt(mc.p10)}〜${fmt(mc.p90)}</div></div>
+  </div>`;
+  if(S.rtype!=="wishes"){
+    const p = probAtLeast(mc, target);
+    h += `<div class="note">この買い方で印が${fmt(target)}以上たまる確率は<b>約${Math.round(p*100)}%</b>です(期待値で届いても、運が悪いと下回ります)。</div>`;
+  }
+  h += `<h3>買い方(${PACKS.map(p=>p.name.replace("心願パック","パック")).join("/")}の回数)</h3>`;
+  h += `<div class="tblwrap"><table><tr><th>案</th><th>課金額</th>${PACKS.map((p,i)=>`<th>パック${i+1}</th>`).join("")}<th>福袋</th><th>進捗</th><th>印の期待値</th></tr>`;
+  // same-cost alternatives (up to 4)
+  const sameCost = list.filter(x=>x.ev.cost===best.ev.cost).slice(0,4);
+  sameCost.forEach((x,k)=>{ h += rowPlan(k===0?"最安":"同額の別案", x, k===0); });
+  h += `</table></div>`;
+  // pareto for bags
+  const pr = pareto(list).filter(x=>x.ev.bags>best.ev.bags).slice(0,6);
+  if(pr.length){
+    h += `<h3>福袋を増やしたい場合</h3><p class="lead" style="margin:0">福袋の数ごとに、最も安い買い方です。</p>`;
+    h += `<div class="tblwrap"><table><tr><th>追加額</th><th>課金額</th>${PACKS.map((p,i)=>`<th>パック${i+1}</th>`).join("")}<th>福袋</th><th>進捗</th><th>印の期待値</th></tr>`;
+    pr.forEach(x=>{ h += rowPlan("+"+yen(x.ev.cost-best.ev.cost), x, false); });
+    h += `</table></div>`;
+  }
+  if(S.rtype==="wishes" && best.ev.total-target===0 && best.ev.cost>0){
+    h += `<div class="note warn"><b>券の余裕が0枚です。</b> 委託を1件でも取りこぼすと届きません。足りなくなったら最終日にパック1(10枚)やパック2(18枚)で調整してください。</div>`;
+  }
+  h += `<p class="mc">パック1〜4は1日1回、パック5は1日3回まで。「パックを買える残り日数」が${S.buyDays}日の前提で調べています。</p>`;
+  box.innerHTML = h;
+}
+function rowPlan(label, x, best){
+  return `<tr class="${best?"best":""}"><td>${label}</td><td>${yen(x.ev.cost)}</td>${x.counts.map(c=>`<td>${c}</td>`).join("")}<td>${x.ev.bags}</td><td>${fmt(x.ev.total)}</td><td>${fmt(x.ev.expSeals)}</td></tr>`;
+}
+
+/* ---------- 3. Save vs pull ---------- */
+function sealsFor(done, newW){ return newW*EV_N + (Math.floor((done+newW)/100)-Math.floor(done/100))*EV_S; }
+function topMs(total){ const r = milestonesReached(total); return r.length ? r[r.length-1][0]+"回まで" : "なし"; }
+function buildSave(){
+  const f=$("futureTickets"); f.value=S.futureTickets;
+  f.addEventListener("input",()=>{ S.futureTickets=clampInt(f.value,0,null); render(); });
+}
+function renderSave(){
+  const b=base();
+  const now = b.tickets, fut = S.futureTickets;
+  let h = `<tr><th>何回分ためるか</th><th>毎回引く:印の合計</th><th>毎回引く:報酬</th><th>ためて一気に:引く回数</th><th>ためて一気に:印</th><th>差</th><th>ためて一気に:報酬</th></tr>`;
+  for(let k=1;k<=6;k++){
+    const each = sealsFor(S.doneWishes, now) + (k-1)*sealsFor(0, fut);
+    const eachMs = k===1 ? topMs(S.doneWishes+now) : `今回${topMs(S.doneWishes+now)}、以降毎回${topMs(fut)}`;
+    const pooledW = now + (k-1)*fut;
+    const pooledDone = k===1 ? S.doneWishes : 0;
+    const pooled = sealsFor(pooledDone, pooledW);
+    const diff = pooled-each;
+    h += `<tr>
+      <td>${k===1?"ためない(今回だけ)":`今回を含め${k}回分`}</td><td>${fmt(each)}</td><td>${eachMs}</td>
+      <td>${fmt(pooledDone+pooledW)}回</td><td>${fmt(pooled)}</td><td>${diff>0?"+":""}${fmt(diff)}</td><td>${topMs(pooledDone+pooledW)}</td></tr>`;
+  }
+  $("saveTable").innerHTML = h;
+  // first k reaching 100
+  let k100=null;
+  for(let k=1;k<=20;k++){ const w = (k===1?S.doneWishes:0) + now + (k-1)*fut; if(w>=100){ k100=k; break; } }
+  let n = `<div class="note">印は手持ち・委託の分を除いた、願い事から出る分だけを比べています(どちらの作戦でも同じだけ入るため)。</div>`;
+  if(k100) n += `<div class="note">この見込みだと、<b>${k100===1?"今回だけで":"今回を含め"+k100+"回分ためると"}100回に届きます</b>。100回に届くと真心願い事1回分(期待値390印)が上乗せされ、印の効率が券1枚あたり7.8から約11.7になります。</div>`;
+  n += `<div class="note warn"><b>ためる作戦の注意点</b>:ためている間のイベントでは、回数達成報酬(10回の1,000ダイヤ×3など)と小屋の交換をあきらめることになります。また、次回以降も同じ形式・同じ枚数で開催される保証はありません。</div>`;
+  $("saveNotes").innerHTML = n;
+}
+
+/* ---------- 4. Shop ---------- */
+function buildShop(){
+  document.querySelectorAll('input[name="ssrc"]').forEach(r=>{
+    r.checked = (r.value===S.ssrc);
+    r.addEventListener("change",()=>{ S.ssrc=r.value; render(); });
+  });
+  const m=$("manualSeals"); m.value=S.manualSeals;
+  m.addEventListener("input",()=>{ S.manualSeals=clampInt(m.value,0,null); render(); });
+  let h = `<tr><th>品物</th><th>1回の交換</th><th>価格(印)</th><th>印/個</th><th>上限</th><th>交換回数</th><th>受け取る数</th><th>必要な印</th></tr>`;
+  SHOP.forEach((x,i)=>{
+    h += `<tr><td>${x.name}</td><td>${x.qty}個</td><td>${x.price}</td><td>${fmt1(x.price/x.qty)}</td><td class="lim"></td>
+      <td><input type="number" min="0" value="${S.shop[i]}" aria-label="${x.name}の交換回数" data-i="${i}"></td><td class="got"></td><td class="need"></td></tr>`;
+  });
+  h += `<tr><td colspan="7"><b>合計</b></td><td id="shopSum"></td></tr>`;
+  const tbl=$("shopTable"); tbl.innerHTML=h;
+  tbl.querySelectorAll("input").forEach(inp=>{
+    const i=Number(inp.dataset.i);
+    inp.addEventListener("input",()=>{ S.shop[i]=clampInt(inp.value,0,shopMax(i)); render(); });
+    inp.addEventListener("change",()=>{ inp.value=S.shop[i]; });
+  });
+  $("shopToReverse").addEventListener("click",()=>{
+    S.rtype="shop"; document.querySelectorAll('input[name="rtype"]').forEach(r=>r.checked=(r.value==="shop"));
+    selectTab("reverse"); render();
+  });
+}
+function renderShop(){
+  $("manualSeals").disabled = S.ssrc!=="manual";
+  const rows=$("shopTable").querySelectorAll("tr");
+  SHOP.forEach((x,i)=>{
+    const r=rows[i+1], mx=shopMax(i);
+    if(S.shop[i]>mx){ S.shop[i]=mx; r.querySelector("input").value=mx; }
+    r.querySelector("input").max=mx;
+    r.querySelector(".lim").textContent = x.limit==="daily" ? `1日1回(残り${mx}日)` : `${x.limit}回`;
+    r.querySelector(".got").textContent = S.shop[i] ? fmt(S.shop[i]*x.qty)+"個" : "–";
+    r.querySelector(".need").textContent = S.shop[i] ? fmt(S.shop[i]*x.price) : "–";
+  });
+  const need = shopTotal();
+  $("shopSum").textContent = fmt(need);
+  let avail, mc=null;
+  if(S.ssrc==="fwd"){ const ev=evaluate(S.packs); avail=ev.expSeals; mc=monteCarlo(ev.newW, ev.sincere, ev.baseSeals); }
+  else avail=S.manualSeals;
+  const rest = avail-need;
+  let h = `<div class="bn"><div class="k">必要な印</div><div class="v">${fmt(need)}</div></div>
+    <div class="bn seal"><div class="k">${S.ssrc==="fwd"?"使える印(期待値)":"使える印"}</div><div class="v">${fmt(avail)}</div>${mc?`<div class="x">80%の範囲:${fmt(mc.p10)}〜${fmt(mc.p90)}</div>`:""}</div>
+    <div class="bn ${rest>=0?"ticket":"amber"}"><div class="k">${rest>=0?"余る印":"足りない印"}</div><div class="v">${fmt(Math.abs(rest))}</div></div>`;
+  $("shopNums").innerHTML=h;
+  let n="";
+  if(mc && need>0){ n += `<div class="note">この交換プランに必要な印がたまる確率は<b>約${Math.round(probAtLeast(mc,need)*100)}%</b>です(「手持ちから計算」で入れたパックの回数で計算)。</div>`; }
+  if(S.shop[0] < S.shopDays) n += `<div class="note">1日1回の100ptパーツ(5個で印5)は印1あたりの個数が最も多く、24個で印50の品の約2倍お得です。毎日交換すると${S.shopDays}日で印${S.shopDays*5}です。</div>`;
+  $("shopNotes").innerHTML=n;
+}
+
+/* ---------- Tabs ---------- */
+const TABS=["forward","reverse","save","shop"];
+function selectTab(name){
+  if(!TABS.includes(name)) name="forward";
+  S.tab=name;
+  TABS.forEach(t=>{ $("tab-"+t).setAttribute("aria-selected", t===name?"true":"false"); $("panel-"+t).hidden = t!==name; });
+  try{ if(location.hash!=="#"+name) history.replaceState(null,"","#"+name); }catch(e){}
+  save();
+}
+function buildTabs(){
+  TABS.forEach(t=>$("tab-"+t).addEventListener("click",()=>{ selectTab(t); render(); }));
+  const tl=document.querySelector('[role="tablist"]');
+  tl.addEventListener("keydown",e=>{
+    if(e.key!=="ArrowRight" && e.key!=="ArrowLeft") return;
+    const i=TABS.indexOf(S.tab); const n = TABS[(i+(e.key==="ArrowRight"?1:-1)+TABS.length)%TABS.length];
+    selectTab(n); $("tab-"+n).focus(); render();
+  });
+}
+
+/* ---------- Render ---------- */
+let pending=null;
+function render(){
+  renderStatus();
+  if(pending) cancelAnimationFrame(pending);
+  pending = requestAnimationFrame(()=>{
+    pending=null;
+    renderForward(); renderReverse(); renderSave(); renderShop(); save();
+  });
+}
+function init(){
+  try{ if(window.matchMedia("(max-width:899px)").matches) $("commBox").open=false; }catch(e){}
+  buildStatus(); buildForward(); buildReverse(); buildSave(); buildShop();
+  const h = (location.hash||"").replace("#","");
+  selectTab(TABS.includes(h)?h:S.tab);
+  render();
+}
+buildTabs();
+init();
+})();
+</script>
+</body>
+</html>
