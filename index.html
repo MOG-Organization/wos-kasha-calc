@@ -150,7 +150,7 @@ body{ background-image:var(--bgpaws); background-attachment:fixed; }
 .banner p{ color:#c9d7ea; }
 .scene .smoke{ animation:drift 6s ease-in-out infinite; transform-box:fill-box; transform-origin:center; }
 .scene .smoke.s2{ animation-delay:-3s; }
-@media (max-width:760px){ .banner{ min-height:0; } .banner .scene{ position:static; height:170px; margin-top:-6px; } .banner .bt{ padding:20px 20px 0; max-width:none; } }
+@media (max-width:760px){ .banner{ min-height:0; } .banner .scene{ position:static; height:170px; margin-top:-6px; } .banner .bt{ padding:16px 20px 20px; max-width:none; } }
 @keyframes drift{ 0%{ transform:translate(0,4px); opacity:0; } 30%{ opacity:.9; } 100%{ transform:translate(6px,-14px); opacity:0; } }
 @media (max-width:560px){ .hut{ width:96px; } }
 .guide{ list-style:none; margin:0 0 18px; padding:14px 16px; background:var(--surface); border:1px solid var(--line); border-radius:18px; display:grid; gap:10px; counter-reset:g; }
@@ -187,8 +187,7 @@ aside h2::before, .bn.seal .k::before, .pawdot::before{ content:""; display:inli
     <circle cx="1150" cy="58" r="26" fill="#fff1c4"/>
     <g transform="translate(640 54) rotate(-12) scale(.8)"><path d="M0 0h64v15a7 7 0 0 0 0 14v15H0V29a7 7 0 0 0 0-14z" fill="#8fd0ff"/><path d="M44 4v36" stroke="#142a52" stroke-width="2" stroke-dasharray="3 4"/></g>
     <g transform="translate(735 150) rotate(14) scale(.6)"><path d="M0 0h64v15a7 7 0 0 0 0 14v15H0V29a7 7 0 0 0 0-14z" fill="#8fd0ff" opacity=".8"/><path d="M44 4v36" stroke="#142a52" stroke-width="2" stroke-dasharray="3 4"/></g>
-    <path d="M0 290 Q300 266 600 286 T1200 276 V320 H0Z" fill="#eef4fb"/>
-    <g transform="translate(820 72) scale(2.2)">
+    <g transform="translate(820 82) scale(2.2)">
       <circle class="smoke" cx="99" cy="15" r="5" fill="#c9d6e4"/>
       <circle class="smoke s2" cx="105" cy="8" r="3.6" fill="#c9d6e4"/>
       <rect x="92" y="24" width="11" height="22" fill="#7d4b22"/>
@@ -206,8 +205,8 @@ aside h2::before, .bn.seal .k::before, .pawdot::before{ content:""; display:inli
       <ellipse cx="87" cy="94" rx="7" ry="5.5" fill="#ef8a25"/>
       <path d="M84 94q3 2 6 0" stroke="#7d4b22" stroke-width="1" fill="none"/>
       <path d="M87 89.5v-3" stroke="#7d4b22" stroke-width="2" stroke-linecap="round"/>
-      <path d="M0 98 Q35 92 70 97 T140 96 V104 H0Z" fill="#eef4fb"/>
     </g>
+    <path d="M0 290 Q300 266 600 286 T1200 276 V320 H0Z" fill="#eef4fb"/>
     <g fill="#f07aa5">
       <use href="#pw" transform="translate(560 294) rotate(78) scale(.85)"/>
       <use href="#pw" transform="translate(616 304) rotate(84) scale(.85)"/>
@@ -307,15 +306,16 @@ aside h2::before, .bn.seal .k::before, .pawdot::before{ content:""; display:inli
 
   <details class="panel" style="margin-top:18px">
     <summary>計算の根拠と仮定</summary>
-    <h3>ゲーム内画面から読み取った数値(2026年10月28日撮影のスクリーンショット)</h3>
+    <h3>ゲーム内の表記から読み取った数値(2026年10月28日時点)</h3>
     <ul class="src">
-      <li>通常の願い事の排出確率:ルール説明の「確率詳細」タブ。12項目の合計が100.000%になることを確認済み。</li>
-      <li>真心願い事の排出確率:同じく「確率詳細」タブ(印×1000が10%、×600が15%、×400が25%、×200が50%)。</li>
-      <li>心願値:通常の願い事1回で1ポイント、100ポイントで真心願い事1回(ルール説明)。</li>
-      <li>イベント終了時、100ポイント未満の心願値は消える。お願い券と夢を叶える印は消えずに次回へ繰り越せる(ルール説明「報酬の再配布」)。</li>
+      <li>通常の願い事の排出確率:お願い屋さん画面右上の「！」→「確率詳細」タブの「【願い事】報酬内容」。12項目の合計が100.000%になることを確認済み。</li>
+      <li>真心願い事の排出確率:同じ「確率詳細」タブの「【真心願い事】報酬内容」(印×1000が10%、×600が15%、×400が25%、×200が50%)。</li>
+      <li>心願値:通常の願い事1回で1ポイント、100ポイントで真心願い事1回(同じ画面の「ルール説明」タブ、「【願い事と報酬】」)。</li>
+      <li>イベント終了時、100ポイント未満の心願値は消える。お願い券と夢を叶える印は消えずに次回へ繰り越せる(「ルール説明」タブ、「【報酬の再配布】」)。</li>
       <li>回数達成報酬(10・30・70・200・400・600・1,000回):お願い屋さん画面上部の進捗バー。</li>
-      <li>委託13件の内容と報酬、心願パックの価格・券の枚数・購入上限・ダイヤ・福袋の数:委託画面と心願パック画面。</li>
-      <li>小屋の品物・個数・価格・交換上限:カーシャの小屋の画面。アイコン右下の数字が1回の交換で受け取れる個数であることは、プレイヤー確認済み。</li>
+      <li>委託13件の内容と報酬:「委託」タブ。</li>
+      <li>心願パックの価格・券の枚数・1日の購入上限・ダイヤ・福袋の数:「心願パック」画面。</li>
+      <li>小屋の品物・個数・価格・交換上限:「カーシャの小屋」タブ。アイコン右下の数字が1回の交換で受け取れる個数であることは、ゲーム内で確認済み。</li>
     </ul>
     <h3>仮定(画面からは確認できていないもの)</h3>
     <ul class="src">
